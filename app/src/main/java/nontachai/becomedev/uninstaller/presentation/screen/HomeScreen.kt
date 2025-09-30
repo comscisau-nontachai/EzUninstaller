@@ -1,6 +1,10 @@
 package nontachai.becomedev.uninstaller.presentation.screen
 
 import android.R.attr.contentDescription
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -37,45 +42,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import nontachai.becomedev.uninstaller.R
+import nontachai.becomedev.uninstaller.domain.model.AppInfoModel
 import nontachai.becomedev.uninstaller.presentation.ui.theme.CoolGray
 
 @Composable
 fun HomeScreen() {
+    val context  = androidx.compose.ui.platform.LocalContext.current
+    val appsList = remember { getInstalledApps(context) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
         // Background split into black (top) and white (bottom)
-        Column(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .height(56.dp)
-                    .fillMaxWidth()
-                    .background(CoolGray)
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-            ) {
-
-            }
-        }
+        BuildBackground()
 
         //content
         Column {
             StorageCard()
             LabelAndSelectAll()
-            AppsList()
+            AppsList(appsList)
         }
-
-
-
     }
 
 }
@@ -83,7 +76,26 @@ fun HomeScreen() {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    //HomeScreen()
+}
+
+@Composable
+fun BuildBackground(){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .height(56.dp)
+                .fillMaxWidth()
+                .background(CoolGray)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+        ) {
+
+        }
+    }
 }
 
 @Composable
@@ -248,15 +260,15 @@ fun LabelAndSelectAll(){
 }
 
 @Composable
-fun AppsList(isCheck: Boolean = false) {
+fun AppsList(appsList: List<AppInfoModel>, isCheck: Boolean = false) {
     var isChecked by remember { mutableStateOf(false) }
 
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
-        items(50) { index ->
+        items(appsList) { item ->
             AppItem(
-                appName = "Application $index",
-                appSize = "${(10..100).random()} MB",
-                iconRes = R.drawable.ic_launcher_foreground, // replace with your drawable resource
+                appName = item.name,
+                appSize = "${convertBytesToMB(item.size ?: 0L)} MB",
+                iconBitmap =  item.icon.toBitmap(), // replace with your drawable resource
                 checked = true,
                 onCheckedChange = {
                     isChecked = it
@@ -270,7 +282,7 @@ fun AppsList(isCheck: Boolean = false) {
 fun AppItem(
     appName: String,
     appSize: String,
-    iconRes: Int, // your drawable resource id
+    iconBitmap: Bitmap, // your drawable resource id
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -282,12 +294,12 @@ fun AppItem(
     ) {
         // App Icon
         Image(
-            painter = painterResource(id = iconRes),
+            bitmap = iconBitmap.asImageBitmap(),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(50)),
+                .clip(RoundedCornerShape(20)),
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -314,4 +326,33 @@ fun AppItem(
             onCheckedChange = onCheckedChange
         )
     }
+}
+
+
+
+//move to viewmodel or util
+fun getInstalledApps(context: Context): List<AppInfoModel> {
+    val pm: PackageManager = context.packageManager
+    val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+    //apps.filter { pm.getLaunchIntentForPackage(it.packageName) != null }
+
+    return apps.filter { pm.getLaunchIntentForPackage(it.packageName) != null }.map {
+        val name = pm.getApplicationLabel(it).toString()
+        val icon: Drawable = pm.getApplicationIcon(it)
+        val size = it.sourceDir?.let { path ->
+            val file = java.io.File(path)
+            file.length()
+        }
+        AppInfoModel(
+            name = name,
+            packageName = it.packageName,
+            icon = icon,
+            size = size
+        )
+    }
+}
+
+fun convertBytesToMB(bytes: Long): String {
+    val mb = bytes.toDouble() / (1024 * 1024)
+    return String.format("%.2f", mb)
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import nontachai.becomedev.uninstaller.presentation.screen.HomeScreen
 import nontachai.becomedev.uninstaller.presentation.ui.theme.*
+import kotlin.coroutines.coroutineContext
 
 @ExperimentalMaterial3Api
 @Composable
@@ -40,7 +41,7 @@ fun MyApp() {
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 // A surface container using the 'background' color from the theme
-                HomeScreen()
+                HomeScreen() // Pass the context
             }
         }
     }
