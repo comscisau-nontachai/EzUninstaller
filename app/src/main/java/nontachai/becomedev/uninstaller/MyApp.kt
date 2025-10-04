@@ -1,6 +1,7 @@
 package nontachai.becomedev.uninstaller
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,45 +28,47 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.DarkGray
+import com.google.android.gms.ads.MobileAds
+import nontachai.becomedev.uninstaller.di.appModule
 import nontachai.becomedev.uninstaller.presentation.screen.HomeScreen
 import nontachai.becomedev.uninstaller.presentation.ui.theme.*
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.startKoin
 import kotlin.coroutines.coroutineContext
 
-@ExperimentalMaterial3Api
-@Composable
-fun MyApp() {
-    EzUnintallerTheme {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = { AppBar() }
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                // A surface container using the 'background' color from the theme
-                HomeScreen() // Pass the context
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // Initialize any application-wide resources here if needed
+
+        startKoin {
+            androidContext(this@MyApp)
+            modules(appModule)
+        }
+
+        // Initialize Google Mobile Ads SDK
+        MobileAds.initialize(this) { initializationStatus ->
+            // This callback is called once the initialization is complete.
+
+            // Get the status of all adapters.
+            val statusMap = initializationStatus.adapterStatusMap
+
+            for (adapterClass in statusMap.keys) {
+                val status = statusMap[adapterClass]
+
+                // Log the adapter's class name and its initialization status.
+                Log.d("LOGD", String.format(
+                    "Adapter: %s, State: %s, Description: %s, Latency: %dms",
+                    adapterClass,
+                    status?.initializationState,
+                    status?.description,
+                    status?.latency
+                ))
             }
+
+            // You can now safely make your first ad request.
+            // Note: It's also safe to request ads before this callback,
+            // as the SDK will queue the request.
         }
     }
-}
-
-@ExperimentalMaterial3Api
-@Composable
-fun AppBar() {
-    TopAppBar(
-        title = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Ez Uninstaller App" , color = Color.White )
-            }
-        },
-        actions = {
-            IconButton(onClick = { /* TODO: handle actions */ }) {
-                Icon(Icons.Filled.MoreVert, contentDescription = "More actions" , tint = Color.White)
-            }
-        },
-        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-            containerColor = CoolGray // dark gray
-        )
-    )
 }

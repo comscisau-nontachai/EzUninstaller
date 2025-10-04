@@ -18,6 +18,10 @@ android {
         versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-1787292132881960/6318004756\"")
+
+        manifestPlaceholders["admob_app_id"] = "ca-app-pub-1787292132881960~3425846590"
     }
 
     buildTypes {
@@ -38,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -51,6 +56,16 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Koin for Jetpack Compose
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
+
+    //Admob
+    implementation ("com.google.android.gms:play-services-ads:24.6.0") // หรือแทนด้วย latest version
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -11,4 +11,5 @@ val CoolGray = Color(0xFF444444)
 val Ebony = Color(0xFF0a0708)
 
 val Red = Color(0xFF970c10)
+val Cinnabar = Color(0xFFe43d40)
 
